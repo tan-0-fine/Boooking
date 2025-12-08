@@ -7,7 +7,7 @@ Dưới đây là toàn bộ các màn hình giao diện được thiết kế t
 ## 🏠 Màn hình chính (Home)
 
 <p align="center">
-  <img src="figma-images/home.png" width="250">
+  <img src="home.png" width="250">
 </p>
 
 ---
@@ -15,14 +15,14 @@ Dưới đây là toàn bộ các màn hình giao diện được thiết kế t
 ## ✈️ Quy trình đặt vé máy bay
 
 <p align="center">
-  <img src="figma-images/chuyen-di.png" width="250">
-  <img src="figma-images/chon-ve.png" width="250">
-  <img src="figma-images/chon-cho-ngoi.png" width="250">
+  <img src="chuyen-di.png" width="250">
+  <img src="chon-ve.png" width="250">
+  <img src="chon-cho-ngoi.png" width="250">
 </p>
 
 <p align="center">
-  <img src="figma-images/dat-ve-may-bay.png" width="250">
-  <img src="figma-images/nhap-thong-tin.png" width="250">
+  <img src="dat-ve-may-bay.png" width="250">
+  <img src="nhap-thong-tin.png" width="250">
 </p>
 
 ---
@@ -30,8 +30,8 @@ Dưới đây là toàn bộ các màn hình giao diện được thiết kế t
 ## 🏨 Đặt phòng khách sạn
 
 <p align="center">
-  <img src="figma-images/dat-phong.png" width="250">
-  <img src="figma-images/xem-phong.png" width="250">
+  <img src="dat-phong.png" width="250">
+  <img src="xem-phong.png" width="250">
 </p>
 
 ---
@@ -39,8 +39,8 @@ Dưới đây là toàn bộ các màn hình giao diện được thiết kế t
 ## 🎟️ Voucher – Ưu đãi
 
 <p align="center">
-  <img src="figma-images/vouchers.png" width="250">
-  <img src="figma-images/thanh-toan.png" width="250">
+  <img src="vouchers.png" width="250">
+  <img src="thanh-toan.png" width="250">
 </p>
 
 ---
@@ -48,13 +48,13 @@ Dưới đây là toàn bộ các màn hình giao diện được thiết kế t
 ## 👤 Tài khoản người dùng
 
 <p align="center">
-  <img src="figma-images/log-in.png" width="250">
-  <img src="figma-images/sign-up.png" width="250">
-  <img src="figma-images/profile.png" width="250">
+  <img src="log-in.png" width="250">
+  <img src="sign-up.png" width="250">
+  <img src="profile.png" width="250">
 </p>
 
 <p align="center">
-  <img src="figma-images/da-luu.png" width="250">
+  <img src="da-luu.png" width="250">
 </p>
 
 ---
@@ -62,7 +62,7 @@ Dưới đây là toàn bộ các màn hình giao diện được thiết kế t
 ## 🌍 Giao diện chào mừng
 
 <p align="center">
-  <img src="figma-images/wellcome-travel.png" width="250">
+  <img src="wellcome-travel.png" width="250">
 </p>
 
 ---
