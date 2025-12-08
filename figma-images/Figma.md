@@ -1,35 +1,21 @@
-<p align="center">
-  <img src="Home.png" width="250">
-</p>
+# Thiết kế giao diện ứng dụng (UI Flow)
 
 <p align="center">
-  <img src="chuyen-di.png" width="250">
-  <img src="chon-ve.png" width="250">
-  <img src="chon-cho-ngoi.png" width="250">
-</p>
+  <img src="figma-images/wellcome-travel.png" width="260">
+  <img src="figma-images/log-in.png" width="260">
+  <img src="figma-images/sign-up.png" width="260">
+  <img src="figma-images/Home.png" width="260">
+  <img src="figma-images/chuyen-di.png" width="260">
+  <img src="figma-images/chon-hang.png" width="260">
+  <img src="figma-images/chon-ve.png" width="260">
+  <img src="figma-images/nhap-thong-tin.png" width="260">
+  <img src="figma-images/chon-cho-ngoi.png" width="260">
+  <img src="figma-images/thanh-toan.png" width="260">
+  <img src="figma-images/vouchers.png" width="260">
+  <img src="figma-images/dat-ve-may-bay.png" width="260">
+  <img src="figma-images/dat-phong.png" width="260">
+  <img src="figma-images/xem-phong.png" width="260">
+  <img src="figma-images/da-luu.png" width="260">
+  <img src="figma-images/profile.png" width="260">
 
-<p align="center">
-  <img src="dat-ve-may-bay.png" width="250">
-  <img src="nhap-thong-tin.png" width="250">
-</p>
-<p align="center">
-  <img src="dat-phong.png" width="250">
-  <img src="xem-phong.png" width="250">
-</p>
-
-<p align="center">
-  <img src="vouchers.png" width="250">
-  <img src="thanh-toan.png" width="250">
-</p>
-
-<p align="center">
-  <img src="log-in.png" width="250">
-  <img src="sign-up.png" width="250">
-  <img src="profile.png" width="250">
-</p>
-<p align="center">
-  <img src="da-luu.png" width="250">
-</p>
-<p align="center">
-  <img src="wellcome-travel.png" width="250">
 </p>
