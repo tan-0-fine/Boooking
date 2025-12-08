@@ -7,7 +7,7 @@ Dưới đây là toàn bộ các màn hình giao diện được thiết kế t
 ## 🏠 Màn hình chính (Home)
 
 <p align="center">
-  <img src="home.png" width="250">
+  <img src="Home.png" width="250">
 </p>
 
 ---
