@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Travel App</string>
+    <string name="facebook_app_id">1231743402227390</string>
+    <string name="facebook_client_token">CLIENT_TOKEN_TỪ_META</string>
+</resources>
