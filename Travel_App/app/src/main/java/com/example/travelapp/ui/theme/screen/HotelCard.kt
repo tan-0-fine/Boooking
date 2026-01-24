@@ -32,30 +32,28 @@ import com.example.travelapp.ui.theme.api.HotelProperty
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.IconButton
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.ui.zIndex
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.request.ImageRequest
+import com.example.travelapp.ui.theme.viewmodel.FavoriteViewModel
 
-// Trong file component/HotelCard.kt
 @Composable
 fun HotelCard(
     hotel: HotelProperty,
+    favoriteViewModel: FavoriteViewModel,
     onClick: () -> Unit
 ) {
-    var isFavorite by remember { mutableStateOf(false) }
+    // ✅ LẤY STATE FAVORITE TỪ VIEWMODEL
+    val isFavorite = favoriteViewModel.isFavorite(hotel)
 
     Card(
-        modifier = Modifier
-            .width(200.dp)
-            .clickable { onClick() },
+        modifier = Modifier.width(200.dp),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Column {
 
             Box {
-                // Ảnh khách sạn
                 AsyncImage(
                     model = hotel.thumbnail,
                     contentDescription = null,
@@ -63,19 +61,19 @@ fun HotelCard(
                     modifier = Modifier
                         .height(130.dp)
                         .fillMaxWidth()
+                        .clickable { onClick() }
                 )
 
-                // ❤️ Favorite icon
                 IconButton(
-                    onClick = { isFavorite = !isFavorite },
+                    onClick = {
+                        favoriteViewModel.toggleFavorite(hotel)
+                    },
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(6.dp)
-                        .background(
-                            Color.White.copy(alpha = 0.9f),
-                            shape = CircleShape
-                        )
-                        .size(32.dp)
+                        .zIndex(1f) // 🔥 BẮT BUỘC
+                        .background(Color.White, CircleShape)
+
                 ) {
                     Icon(
                         imageVector =
@@ -83,8 +81,8 @@ fun HotelCard(
                                 Icons.Default.Favorite
                             else
                                 Icons.Default.FavoriteBorder,
-                        contentDescription = null,
-                        tint = Color.Red
+                        tint = Color.Red,
+                        contentDescription = null
                     )
                 }
             }
@@ -137,3 +135,4 @@ fun HotelCard(
         }
     }
 }
+

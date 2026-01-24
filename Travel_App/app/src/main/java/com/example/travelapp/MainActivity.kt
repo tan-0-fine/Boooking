@@ -50,10 +50,9 @@ fun MainScreen() {
             if (
                 currentRoute in listOf(
                     Screen.Home.route,
-                    Screen.Saved.route,
+                    Screen.Favorite.route,
                     Screen.Trip.route,
                     Screen.Voucher.route,
-                    Screen.Favourite.route,
                     Screen.Profile.route
                 )
             ) {

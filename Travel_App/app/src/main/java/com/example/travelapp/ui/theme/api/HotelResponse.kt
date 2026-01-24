@@ -1,17 +1,24 @@
 package com.example.travelapp.ui.theme.api
 
+import com.google.gson.annotations.SerializedName
+
 data class HotelResponse(
     val ads: List<HotelProperty>?,
-    val properties: List<HotelProperty>? // Thông thường kết quả tự nhiên nằm ở đây
+    val properties: List<HotelProperty>?
+)
+
+
+data class SearchMetadata(
+    val status: String?
 )
 
 data class HotelProperty(
     val name: String?,
-    val thumbnail: String?,           // Link ảnh để dùng với Coil
-    val overall_rating: Double?,      // Ví dụ: 4.7
-    val reviews: Int?,                // Số lượng review
-    val extracted_price: Long?,       // Giá trị số để tính toán: 7378000
-    val price: String?,               // Giá hiển thị: "₫7,378,000"
-    val amenities: List<String>?,      // Danh sách tiện ích: Spa, Pool...
-    val free_cancellation: Boolean?   // Chính sách hủy
+    val thumbnail: String?,
+    val overall_rating: Double?,
+    val reviews: Int?,
+    val price: String?,
+    val extracted_price: Int?,
+    val free_cancellation: Boolean?,
+    val property_token: String?
 )

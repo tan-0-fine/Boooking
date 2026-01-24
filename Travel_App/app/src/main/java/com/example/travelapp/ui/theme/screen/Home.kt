@@ -1,6 +1,7 @@
 package com.example.travelapp.ui.theme.screen
 
 import android.net.http.SslCertificate.restoreState
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,10 +19,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -46,23 +50,55 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.travelapp.ui.theme.api.HotelProperty
 import com.example.travelapp.ui.theme.api.RetrofitClient
+import com.example.travelapp.ui.theme.component.EmptyState
+import com.example.travelapp.ui.theme.navigation.Screen
+import java.text.Normalizer
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.travelapp.ui.theme.viewmodel.FavoriteViewModel
+import com.example.travelapp.ui.theme.viewmodel.HomeViewModel
+import com.example.travelapp.ui.theme.viewmodel.HotelDetailViewModel
+
 
 @Composable
-fun Home(navController: NavHostController) {
-
+fun Home(
+    navController: NavHostController,
+    homeViewModel: HomeViewModel = viewModel(),
+    hotelDetailViewModel: HotelDetailViewModel = viewModel()
+) {
+    val selectedLocation = homeViewModel.selectedLocation
     val apiService = RetrofitClient.instance
     var hotels by remember { mutableStateOf<List<HotelProperty>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
+    var searchQuery by remember { mutableStateOf("") }
+    val favoriteViewModel: FavoriteViewModel = viewModel()
 
-    LaunchedEffect(Unit) {
+    val locations = listOf(
+        "Hồ Chí Minh, Việt Nam",
+        "Hà Nội, Việt Nam",
+        "Đà Nẵng, Việt Nam",
+        "Nha Trang, Việt Nam"
+    )
+
+
+    // ================= API CALL =================
+    LaunchedEffect(selectedLocation) {
+        isLoading = true
         try {
-            val response = apiService.getHotels(
-                query = "Khách sạn tại Hồ Chí Minh",
-                checkIn = "2026-03-10",
-                checkOut = "2026-03-11",
-                apiKey = "YOUR_API_KEY"
+            val response = apiService.searchHotels(
+                query = buildHotelQuery(selectedLocation),
+                checkInDate = "2026-03-10",
+                checkOutDate = "2026-03-11",
+                apiKey = "e5ca58b702415625737f21d18ee1b3c715d4023b43f23d606ec1949d2f715ee8"
             )
-            hotels = response.ads ?: emptyList()
+
+            hotels = listOfNotNull(
+                response.ads,
+                response.properties
+            ).flatten()
+
         } catch (e: Exception) {
             hotels = emptyList()
         } finally {
@@ -70,97 +106,192 @@ fun Home(navController: NavHostController) {
         }
     }
 
+
+    // ================= SEARCH FILTER =================
+    val filteredHotels =
+        if (searchQuery.isBlank()) {
+            hotels
+        } else {
+            val query = searchQuery
+                .lowercase()
+                .removeVietnameseAccents()
+
+            hotels.filter {
+                it.name
+                    ?.lowercase()
+                    ?.removeVietnameseAccents()
+                    ?.contains(query) == true
+            }
+        }
+
+    val isSearching = searchQuery.isNotBlank()
+
+    // ================= POPULAR / RECOMMEND =================
+    val popularHotels =
+        hotels
+            .filter { it.reviews != null }
+            .sortedByDescending { it.reviews ?: 0 }
+            .take(5)
+
+
+    val recommendHotels =
+        hotels
+            .filter { it.extracted_price != null }
+            .sortedBy { it.extracted_price!! }
+            .take(5)
+
+
+    // ================= UI =================
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
 
-        item { HomeHeader() }
-
-        item { SearchBar() }
-
-        item { CategoryRow() }
-
         item {
-            SectionTitle(
-                title = "Popular",
-                onSeeAll = {}
+            HomeHeader(
+                locations = locations,
+                selectedLocation = selectedLocation,
+                onLocationChange = {
+                    homeViewModel.updateLocation(it)
+                }
             )
         }
 
         item {
-            if (isLoading) {
-                LoadingRow()
-            } else {
-                HotelHorizontalList(
-                    hotels = hotels,
-                    navController = navController
-                )
+            SearchBar(
+                query = searchQuery,
+                onQueryChange = { searchQuery = it }
+            )
+        }
+
+        // ===== SEARCH RESULT =====
+        if (isSearching) {
+
+            item {
+                if (!isLoading && filteredHotels.isEmpty()) {
+                    EmptyState("No hotels found for \"$searchQuery\"")
+                }
             }
-        }
 
-        item {
-            SectionTitle(
-                title = "Recommend",
-                onSeeAll = {}
-            )
-        }
+            item {
+                if (!isLoading && filteredHotels.isNotEmpty()) {
+                    HotelHorizontalList(
+                        hotels = filteredHotels,
+                        navController = navController,
+                        favoriteViewModel = favoriteViewModel,
+                        hotelDetailViewModel = hotelDetailViewModel
 
-        item {
-            HotelHorizontalList(
-                hotels = hotels,
-                navController = navController
-            )
+                    )
+
+                }
+            }
+
+        } else {
+
+            // ===== POPULAR =====
+            item {
+                SectionTitle(title = "Popular", onSeeAll = {})
+            }
+
+            item {
+                when {
+                    isLoading -> LoadingRow()
+                    popularHotels.isEmpty() ->
+                        EmptyState("No popular hotels")
+                    else ->
+                        HotelHorizontalList(
+                            hotels = popularHotels,
+                            navController = navController,
+                            favoriteViewModel = favoriteViewModel,
+                            hotelDetailViewModel = hotelDetailViewModel
+
+                        )
+
+                }
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+
+            // ===== RECOMMEND =====
+            item {
+                SectionTitle(title = "Recommend", onSeeAll = {})
+            }
+
+            item {
+                when {
+                    isLoading -> LoadingRow()
+                    recommendHotels.isEmpty() ->
+                        EmptyState("No recommendations")
+                    else ->
+                        HotelHorizontalList(
+                            hotels = recommendHotels,
+                            navController = navController,
+                            favoriteViewModel = favoriteViewModel,
+                            hotelDetailViewModel = hotelDetailViewModel
+
+                        )
+
+                }
+            }
         }
     }
 }
 
 @Composable
-fun HomeHeader() {
+fun HomeHeader(
+    locations: List<String>,
+    selectedLocation: String,
+    onLocationChange: (String) -> Unit
+) {
     Column {
         Text("Explore", color = Color.Gray, fontSize = 14.sp)
 
         Row(
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                "Hồ Chí Minh",
+                text = selectedLocation.substringBefore(","),
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold
             )
 
-            Spacer(modifier = Modifier.width(8.dp))
-
-            AssistChip(
-                onClick = {},
-                label = { Text("Hồ Chí Minh, Việt Nam") }
+            LocationSelector(
+                locations = locations,
+                selectedLocation = selectedLocation,
+                onLocationSelected = onLocationChange
             )
         }
     }
 
     Spacer(modifier = Modifier.height(16.dp))
 }
+
 @Composable
-fun SearchBar() {
+fun SearchBar(
+    query: String,
+    onQueryChange: (String) -> Unit
+) {
     OutlinedTextField(
-        value = "",
-        onValueChange = {},
-        placeholder = { Text("Find thinking to do") },
+        value = query,
+        onValueChange = onQueryChange,
+        placeholder = { Text("Search hotel name") },
         modifier = Modifier
             .fillMaxWidth()
             .height(52.dp),
         shape = RoundedCornerShape(30.dp),
         leadingIcon = {
             Icon(Icons.Default.Search, contentDescription = null)
-        }
+        },
+        singleLine = true
     )
 
     Spacer(modifier = Modifier.height(16.dp))
 }
+
 @Composable
 fun CategoryRow() {
-    val categories = listOf("Location", "Hotels", "Plane", "Food", "Adventure")
+    val categories = listOf("Location", "Hotels", "Plane", "Adventure")
 
     LazyRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -194,7 +325,9 @@ fun SectionTitle(title: String, onSeeAll: () -> Unit) {
 @Composable
 fun HotelHorizontalList(
     hotels: List<HotelProperty>,
-    navController: NavHostController
+    navController: NavHostController,
+    favoriteViewModel: FavoriteViewModel,
+    hotelDetailViewModel: HotelDetailViewModel
 ) {
     LazyRow(
         horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -202,13 +335,16 @@ fun HotelHorizontalList(
         items(hotels) { hotel ->
             HotelCard(
                 hotel = hotel,
+                favoriteViewModel = favoriteViewModel,
                 onClick = {
-                    navController.navigate("hotel_detail")
+                    hotelDetailViewModel.setHotel(hotel)
+                    navController.navigate(Screen.HotelDetail.route)
                 }
             )
         }
     }
 }
+
 
 @Composable
 fun LoadingRow() {
@@ -220,54 +356,49 @@ fun LoadingRow() {
     }
 }
 
-// Component thanh điều hướng dưới cùng
+
 @Composable
 fun BottomNavigationBar(navController: NavController) {
-    val currentRoute = navController
-        .currentBackStackEntryAsState().value?.destination?.route
+
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    fun navigateTo(route: String) {
+        navController.navigate(route) {
+            popUpTo(navController.graph.startDestinationId) {
+                saveState = true
+            }
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
 
     NavigationBar(containerColor = Color.White) {
 
         NavigationBarItem(
             icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
             label = { Text("Home") },
-            selected = currentRoute == "home",
-            onClick = {
-                navController.navigate("home") {
-                    popUpTo(navController.graph.startDestinationId) {
-                        saveState = true
-                    }
-                    launchSingleTop = true
-                    restoreState = true
-                }
-            }
+            selected = currentRoute == Screen.Home.route,
+            onClick = { navigateTo(Screen.Home.route) }
         )
 
         NavigationBarItem(
-            icon = { Icon(Icons.Default.FavoriteBorder, contentDescription = "Saved") },
-            label = { Text("Saved") },
-            selected = currentRoute == "saved",
-            onClick = {
-                navController.navigate("saved") {
-                    launchSingleTop = true
-                }
-            }
+            icon = { Icon(Icons.Default.FavoriteBorder, contentDescription = "Favorite") },
+            label = { Text("Favorite") },
+            selected = currentRoute == Screen.Favorite.route,
+            onClick = { navigateTo(Screen.Favorite.route) }
         )
 
         NavigationBarItem(
             icon = {
                 Icon(
                     painter = painterResource(id = R.drawable.trip),
-                    contentDescription = "trip"
+                    contentDescription = "Trip"
                 )
             },
             label = { Text("Trip") },
-            selected = currentRoute == "trip",
-            onClick = {
-                navController.navigate("trip") {
-                    launchSingleTop = true
-                }
-            }
+            selected = currentRoute == Screen.Trip.route,
+            onClick = { navigateTo(Screen.Trip.route) }
         )
 
         NavigationBarItem(
@@ -278,38 +409,73 @@ fun BottomNavigationBar(navController: NavController) {
                 )
             },
             label = { Text("Voucher") },
-            selected = currentRoute == "voucher",
-            onClick = {
-                navController.navigate("voucher") {
-                    launchSingleTop = true
-                }
-            }
-        )
-        NavigationBarItem(
-            icon = {
-                Icon(
-                    painter = painterResource(id = R.drawable.favorite),
-                    contentDescription = "favorite"
-                )
-            },
-            label = { Text("Favorite") },
-            selected = currentRoute == "favorite",
-            onClick = {
-                navController.navigate("favorite") {
-                    launchSingleTop = true
-                }
-            }
+            selected = currentRoute == Screen.Voucher.route,
+            onClick = { navigateTo(Screen.Voucher.route) }
         )
 
         NavigationBarItem(
             icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
             label = { Text("Profile") },
-            selected = currentRoute == "profile",
-            onClick = {
-                navController.navigate("profile") {
-                    launchSingleTop = true
-                }
-            }
+            selected = currentRoute == Screen.Profile.route,
+            onClick = { navigateTo(Screen.Profile.route) }
         )
     }
 }
+
+@Composable
+fun LocationSelector(
+    locations: List<String>,
+    selectedLocation: String,
+    onLocationSelected: (String) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    AssistChip(
+        onClick = { expanded = true },
+        label = {
+            Text(selectedLocation)
+        },
+        leadingIcon = {
+            Icon(Icons.Default.LocationOn, contentDescription = null)
+        }
+    )
+
+    DropdownMenu(
+        expanded = expanded,
+        onDismissRequest = { expanded = false }
+    ) {
+        locations.forEach { location ->
+            DropdownMenuItem(
+                text = { Text(location) },
+                onClick = {
+                    onLocationSelected(location)
+                    expanded = false
+                }
+            )
+        }
+    }
+}
+fun buildHotelQuery(location: String): String {
+    return when {
+        location.contains("Hồ Chí Minh") ->
+            "Hotels in Ho Chi Minh City"
+
+        location.contains("Hà Nội") ->
+            "Hotels in Hanoi"
+
+        location.contains("Đà Nẵng") ->
+            "Hotels in Da Nang"
+
+        location.contains("Nha Trang") ->
+            "Hotels in Nha Trang"
+
+        else ->
+            "Hotels in Vietnam"
+    }
+}
+
+fun String.removeVietnameseAccents(): String {
+    val normalized = Normalizer.normalize(this, Normalizer.Form.NFD)
+    return normalized.replace("\\p{InCombiningDiacriticalMarks}+".toRegex(), "")
+}
+
