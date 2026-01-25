@@ -8,11 +8,12 @@ import com.example.travelapp.ui.theme.api.HotelProperty
 
 class HotelDetailViewModel : ViewModel() {
 
-    private val _hotel = mutableStateOf<HotelProperty?>(null)
-    val hotel: HotelProperty?
-        get() = _hotel.value
+    var hotel by mutableStateOf<HotelProperty?>(null)
+        private set
 
-    fun setHotel(hotel: HotelProperty) {
-        _hotel.value = hotel
+    fun selectHotel(hotel: HotelProperty) {
+        this.hotel = hotel
     }
 }
+
+

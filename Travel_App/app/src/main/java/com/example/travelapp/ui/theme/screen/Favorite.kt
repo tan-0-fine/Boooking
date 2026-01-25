@@ -1,5 +1,6 @@
 package com.example.travelapp.ui.theme.screen
 
+import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -23,39 +24,36 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.example.travelapp.R
 import com.example.travelapp.ui.theme.component.EmptyState
+import com.example.travelapp.ui.theme.navigation.Screen
 import com.example.travelapp.ui.theme.viewmodel.FavoriteViewModel
+import com.google.gson.Gson
 
 
+// File: Favorite.kt
 @Composable
-fun Favorite(
-    navController: NavHostController,
-    favoriteViewModel: FavoriteViewModel = viewModel()
-) {
-    val favorites = favoriteViewModel.favorites
-    val favoriteViewModel: FavoriteViewModel = viewModel()
+fun Favorite(navController: NavController, favoriteViewModel: FavoriteViewModel) {
+    val favoriteList by favoriteViewModel.favoriteHotels.collectAsState()
 
-
-    if (favorites.isEmpty()) {
-        EmptyState("Bạn chưa lưu mục nào cả!")
+    if (favoriteList.isEmpty()) {
+        Text("Chưa có khách sạn yêu thích nào")
     } else {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            items(favorites) { hotel ->
-                HotelCardVertical(
+        LazyColumn {
+            items(favoriteList) { hotel ->
+                // Tái sử dụng HotelCard hoặc dùng layout khác
+                HotelCard(
                     hotel = hotel,
+                    isFavorite = true, // Ở màn hình này thì chắc chắn là đang thích rồi
+                    onFavoriteClick = { favoriteViewModel.toggleFavorite(it) }, // Bấm lần nữa để bỏ thích
                     onClick = {
-                        navController.navigate("hotel_detail")
+                        val hotelJson = Uri.encode(Gson().toJson(hotel))
+                        navController.navigate("${Screen.HotelDetail.route}/$hotelJson")
                     }
                 )
             }
         }
     }
 }
-

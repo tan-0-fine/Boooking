@@ -40,12 +40,10 @@ import com.example.travelapp.ui.theme.viewmodel.FavoriteViewModel
 @Composable
 fun HotelCard(
     hotel: HotelProperty,
-    favoriteViewModel: FavoriteViewModel,
+    isFavorite: Boolean, // <--- Thêm dòng này: Trạng thái tim (đỏ hay trắng)
+    onFavoriteClick: (HotelProperty) -> Unit,
     onClick: () -> Unit
 ) {
-    // ✅ LẤY STATE FAVORITE TỪ VIEWMODEL
-    val isFavorite = favoriteViewModel.isFavorite(hotel)
-
     Card(
         modifier = Modifier.width(200.dp),
         shape = RoundedCornerShape(16.dp),
@@ -66,7 +64,7 @@ fun HotelCard(
 
                 IconButton(
                     onClick = {
-                        favoriteViewModel.toggleFavorite(hotel)
+                        onFavoriteClick(hotel)
                     },
                     modifier = Modifier
                         .align(Alignment.TopEnd)
@@ -81,8 +79,8 @@ fun HotelCard(
                                 Icons.Default.Favorite
                             else
                                 Icons.Default.FavoriteBorder,
-                        tint = Color.Red,
-                        contentDescription = null
+                        tint = if (isFavorite) Color.Red else Color.Black,
+                        contentDescription = "Favorite"
                     )
                 }
             }

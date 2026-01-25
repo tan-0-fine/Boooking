@@ -1,5 +1,6 @@
 package com.example.travelapp.ui.theme.screen
 
+import android.net.Uri
 import android.net.http.SslCertificate.restoreState
 import android.util.Log
 import androidx.compose.foundation.clickable
@@ -33,6 +34,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,20 +55,18 @@ import com.example.travelapp.ui.theme.api.RetrofitClient
 import com.example.travelapp.ui.theme.component.EmptyState
 import com.example.travelapp.ui.theme.navigation.Screen
 import java.text.Normalizer
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.travelapp.ui.theme.viewmodel.FavoriteViewModel
 import com.example.travelapp.ui.theme.viewmodel.HomeViewModel
 import com.example.travelapp.ui.theme.viewmodel.HotelDetailViewModel
+import com.google.gson.Gson
 
 
 @Composable
 fun Home(
     navController: NavHostController,
     homeViewModel: HomeViewModel = viewModel(),
-    hotelDetailViewModel: HotelDetailViewModel = viewModel()
+
 ) {
     val selectedLocation = homeViewModel.selectedLocation
     val apiService = RetrofitClient.instance
@@ -74,6 +74,7 @@ fun Home(
     var isLoading by remember { mutableStateOf(true) }
     var searchQuery by remember { mutableStateOf("") }
     val favoriteViewModel: FavoriteViewModel = viewModel()
+    val favoriteList by favoriteViewModel.favoriteHotels.collectAsState()
 
     val locations = listOf(
         "Hồ Chí Minh, Việt Nam",
@@ -180,10 +181,7 @@ fun Home(
                         hotels = filteredHotels,
                         navController = navController,
                         favoriteViewModel = favoriteViewModel,
-                        hotelDetailViewModel = hotelDetailViewModel
-
                     )
-
                 }
             }
 
@@ -203,9 +201,7 @@ fun Home(
                         HotelHorizontalList(
                             hotels = popularHotels,
                             navController = navController,
-                            favoriteViewModel = favoriteViewModel,
-                            hotelDetailViewModel = hotelDetailViewModel
-
+                            favoriteViewModel = favoriteViewModel
                         )
 
                 }
@@ -227,7 +223,6 @@ fun Home(
                             hotels = recommendHotels,
                             navController = navController,
                             favoriteViewModel = favoriteViewModel,
-                            hotelDetailViewModel = hotelDetailViewModel
 
                         )
 
@@ -326,25 +321,32 @@ fun SectionTitle(title: String, onSeeAll: () -> Unit) {
 fun HotelHorizontalList(
     hotels: List<HotelProperty>,
     navController: NavHostController,
-    favoriteViewModel: FavoriteViewModel,
-    hotelDetailViewModel: HotelDetailViewModel
-) {
+    favoriteViewModel: FavoriteViewModel
+) { // Mở ngoặc hàm
+
+    val favoriteList by favoriteViewModel.favoriteHotels.collectAsState()
+
     LazyRow(
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(hotels) { hotel ->
+        items(items = hotels) { hotel ->
+
+            // Dòng này bây giờ sẽ hết lỗi vì favoriteList đã được khai báo ở trên
+            val isFav = favoriteList.any { it.name == hotel.name }
+
             HotelCard(
                 hotel = hotel,
-                favoriteViewModel = favoriteViewModel,
+                isFavorite = isFav,
+                onFavoriteClick = { selectedHotel ->
+                    favoriteViewModel.toggleFavorite(selectedHotel)
+                },
                 onClick = {
-                    hotelDetailViewModel.setHotel(hotel)
-                    navController.navigate(Screen.HotelDetail.route)
-                }
+                    val hotelJson = Uri.encode(Gson().toJson(hotel))
+                    navController.navigate("${Screen.HotelDetail.route}/$hotelJson")}
             )
         }
     }
 }
-
 
 @Composable
 fun LoadingRow() {
