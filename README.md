@@ -1,6 +1,18 @@
 Travel App - Ứng Dụng Đặt Vé Máy Bay & Khách Sạn
 Đồ án cuối kỳ - Ngành Công nghệ thông tin Trường Đại học Giao thông vận tải TP. Hồ Chí Minh (UTH)
 
+Thành viên thực hiện (Nhóm 1)
+Nguyễn Duy Tân - 091205014155
+
+Đinh Nguyễn Công Bắc - 036205001695
+
+Lê Tiến Công - 094205003183
+
+Đặng Nguyễn Minh Phi - 070205003620
+
+Giảng viên hướng dẫn: ThS. Trương Quang Tuấn
+
+
 📝 Giới thiệu
 Travel App là ứng dụng di động hiện đại giúp người dùng tối ưu hóa trải nghiệm du lịch. Ứng dụng tích hợp hai tính năng chính là đặt vé máy bay và đặt phòng khách sạn, đi kèm với hệ thống quản lý hành trình thông minh.
 
@@ -36,3 +48,14 @@ Network: Retrofit / Coil (Load ảnh)
 Database/Backend: Firebase Firestore & Authentication
 
 Local Storage: Room Database / DataStore (Lưu cache)
+
+📱 Ảnh màn hình dự án
+
+### 🏠 Màn hình Home
+![Home Screen](figma-images/home.png)
+
+### ✈️ Màn hình Booking
+![Booking Screen](figma-images/booking.png)
+
+### 👤 Màn hình Profile
+![Profile Screen](figma-images/profile.png)
