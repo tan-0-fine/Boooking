@@ -1,4 +1,3 @@
-HotelDetail.kt
 package com.example.travelapp.ui.theme.screen
 
 import android.net.Uri
