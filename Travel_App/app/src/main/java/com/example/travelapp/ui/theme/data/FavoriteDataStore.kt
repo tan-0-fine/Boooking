@@ -1,38 +1,47 @@
-package com.example.travelapp.ui.theme.data
-
-import androidx.datastore.preferences.core.edit
+package com.example.travelapp.data
 
 import android.content.Context
-import androidx.datastore.preferences.core.stringSetPreferencesKey
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.example.travelapp.ui.theme.api.HotelProperty // <--- Import đúng cái này
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-private val Context.dataStore by preferencesDataStore("favorite_store")
+val Context.favoriteDataStore by preferencesDataStore(name = "favorite_prefs")
 
-object FavoriteKeys {
-    val FAVORITES = stringSetPreferencesKey("favorites")
-}
+class FavoriteStorage(private val context: Context) {
+    private val FAVORITE_KEY = stringPreferencesKey("favorite_hotels")
+    private val gson = Gson()
 
-class FavoriteDataStore(private val context: Context) {
-
-    fun getFavorites(): Flow<Set<String>> {
-        return context.dataStore.data.map { prefs ->
-            prefs[FavoriteKeys.FAVORITES] ?: emptySet()
+    // Đổi Hotel -> HotelProperty
+    val getFavorites: Flow<List<HotelProperty>> = context.favoriteDataStore.data.map { preferences ->
+        val json = preferences[FAVORITE_KEY] ?: "[]"
+        val type = object : TypeToken<List<HotelProperty>>() {}.type
+        try {
+            gson.fromJson(json, type)
+        } catch (e: Exception) {
+            emptyList()
         }
     }
 
-    suspend fun saveFavorite(id: String) {
-        context.dataStore.edit { prefs ->
-            val current = prefs[FavoriteKeys.FAVORITES] ?: emptySet()
-            prefs[FavoriteKeys.FAVORITES] = current + id
-        }
-    }
+    // Đổi Hotel -> HotelProperty
+    suspend fun toggleFavorite(hotel: HotelProperty) {
+        context.favoriteDataStore.edit { preferences ->
+            val json = preferences[FAVORITE_KEY] ?: "[]"
+            val type = object : TypeToken<List<HotelProperty>>() {}.type
+            val currentList: MutableList<HotelProperty> = gson.fromJson(json, type) ?: mutableListOf()
 
-    suspend fun removeFavorite(id: String) {
-        context.dataStore.edit { prefs ->
-            val current = prefs[FavoriteKeys.FAVORITES] ?: emptySet()
-            prefs[FavoriteKeys.FAVORITES] = current - id
+            val existingIndex = currentList.indexOfFirst { it.name == hotel.name }
+
+            if (existingIndex != -1) {
+                currentList.removeAt(existingIndex)
+            } else {
+                currentList.add(0, hotel)
+            }
+            preferences[FAVORITE_KEY] = gson.toJson(currentList)
         }
     }
 }

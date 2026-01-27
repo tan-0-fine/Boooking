@@ -20,5 +20,9 @@ data class HotelProperty(
     val price: String?,
     val extracted_price: Int?,
     val free_cancellation: Boolean?,
-    val property_token: String?
+    val property_token: String?,
+    @SerializedName("description")
+    val description: String?,
+    val location: String? = "Việt Nam",
+    val imageRes: Int? = 0
 )

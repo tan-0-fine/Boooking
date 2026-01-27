@@ -3,8 +3,11 @@ package com.example.travelapp.ui.theme.screen
 import android.net.Uri
 import android.net.http.SslCertificate.restoreState
 import android.util.Log
+import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -41,7 +44,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -60,13 +65,12 @@ import com.example.travelapp.ui.theme.viewmodel.FavoriteViewModel
 import com.example.travelapp.ui.theme.viewmodel.HomeViewModel
 import com.example.travelapp.ui.theme.viewmodel.HotelDetailViewModel
 import com.google.gson.Gson
-
+import com.example.travelapp.ui.theme.data.AppData
 
 @Composable
 fun Home(
     navController: NavHostController,
     homeViewModel: HomeViewModel = viewModel(),
-
 ) {
     val selectedLocation = homeViewModel.selectedLocation
     val apiService = RetrofitClient.instance
@@ -74,16 +78,26 @@ fun Home(
     var isLoading by remember { mutableStateOf(true) }
     var searchQuery by remember { mutableStateOf("") }
     val favoriteViewModel: FavoriteViewModel = viewModel()
-    val favoriteList by favoriteViewModel.favoriteHotels.collectAsState()
+
+    // Context để hiện Toast thông báo
+    val context = LocalContext.current
+
+    // Danh sách các Tag
+    val categories = listOf("Location", "Hotels", "Plane", "Food", "Adventure")
+    var selectedCategory by remember { mutableStateOf("Location") }
 
     val locations = listOf(
-        "Hồ Chí Minh, Việt Nam",
-        "Hà Nội, Việt Nam",
-        "Đà Nẵng, Việt Nam",
-        "Nha Trang, Việt Nam"
+        "Hồ Chí Minh, Việt Nam", "Hà Nội, Việt Nam", "Đà Nẵng, Việt Nam", "Nha Trang, Việt Nam"
     )
-
-
+    val searchKeyword = AppData.searchDestination
+    val allPopularDestinations = remember { getSampleDestinations() }
+    val displayList = remember(searchKeyword) {
+        if (searchKeyword.isNotEmpty()) {
+            allPopularDestinations.filter { it.location.contains(searchKeyword, ignoreCase = true) }
+        } else {
+            allPopularDestinations
+        }
+    }
     // ================= API CALL =================
     LaunchedEffect(selectedLocation) {
         isLoading = true
@@ -95,138 +109,125 @@ fun Home(
                 apiKey = "e5ca58b702415625737f21d18ee1b3c715d4023b43f23d606ec1949d2f715ee8"
             )
 
-            hotels = listOfNotNull(
-                response.ads,
-                response.properties
-            ).flatten()
+            // Gộp danh sách quảng cáo và danh sách thường
+            val resultList = listOfNotNull(response.ads, response.properties).flatten()
+
+            hotels = resultList
+
+            // --- QUAN TRỌNG: Lưu dữ liệu thật vào AppData để màn hình khác dùng ---
+            AppData.hotelList = resultList
 
         } catch (e: Exception) {
             hotels = emptyList()
+            AppData.hotelList = emptyList()
         } finally {
             isLoading = false
         }
     }
 
-
     // ================= SEARCH FILTER =================
-    val filteredHotels =
-        if (searchQuery.isBlank()) {
-            hotels
-        } else {
-            val query = searchQuery
-                .lowercase()
-                .removeVietnameseAccents()
-
-            hotels.filter {
-                it.name
-                    ?.lowercase()
-                    ?.removeVietnameseAccents()
-                    ?.contains(query) == true
-            }
-        }
-
+    val filteredHotels = if (searchQuery.isBlank()) hotels else {
+        val query = searchQuery.lowercase().removeVietnameseAccents()
+        hotels.filter { it.name?.lowercase()?.removeVietnameseAccents()?.contains(query) == true }
+    }
     val isSearching = searchQuery.isNotBlank()
 
     // ================= POPULAR / RECOMMEND =================
-    val popularHotels =
-        hotels
-            .filter { it.reviews != null }
-            .sortedByDescending { it.reviews ?: 0 }
-            .take(5)
-
-
-    val recommendHotels =
-        hotels
-            .filter { it.extracted_price != null }
-            .sortedBy { it.extracted_price!! }
-            .take(5)
-
+    val popularHotels = hotels.filter { it.reviews != null }.sortedByDescending { it.reviews ?: 0 }.take(5)
+    val recommendHotels = hotels.filter { it.extracted_price != null }.sortedBy { it.extracted_price!! }.take(5)
 
     // ================= UI =================
     LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
+        modifier = Modifier.fillMaxSize().padding(16.dp)
     ) {
-
+        // 1. Header chọn địa điểm
         item {
             HomeHeader(
                 locations = locations,
                 selectedLocation = selectedLocation,
-                onLocationChange = {
-                    homeViewModel.updateLocation(it)
-                }
+                onLocationChange = { homeViewModel.updateLocation(it) }
             )
         }
 
+        // 2. Thanh tìm kiếm
         item {
-            SearchBar(
-                query = searchQuery,
-                onQueryChange = { searchQuery = it }
-            )
+            SearchBar(query = searchQuery, onQueryChange = { searchQuery = it })
         }
 
-        // ===== SEARCH RESULT =====
-        if (isSearching) {
+        // 3. TAGS CATEGORY (Đã sửa logic click)
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                categories.forEach { category ->
+                    val isSelected = category == selectedCategory
+                    val backgroundColor = if (isSelected) Color(0xFFE0F7FA) else Color(0xFFF5F5F5)
+                    val textColor = if (isSelected) Color(0xFF00B6F0) else Color.Gray
 
-            item {
-                if (!isLoading && filteredHotels.isEmpty()) {
-                    EmptyState("No hotels found for \"$searchQuery\"")
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(backgroundColor)
+                            .clickable {
+                                // XỬ LÝ CHUYỂN TRANG
+                                when (category) {
+                                    "Location" -> selectedCategory = "Location"
+
+                                    "Hotels" -> {
+                                        // Chuyển sang màn hình AllHotels
+                                        navController.navigate(Screen.AllHotels.route)
+                                    }
+
+                                    "Plane" -> {
+                                        navController.navigate(Screen.FlightBooking.route)
+                                    }
+
+                                    "Food", "Adventure" -> {
+                                        // Hiện thông báo
+                                        Toast.makeText(context, "Tính năng đang chờ cập nhật!", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                            }
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                    ) {
+                        Text(
+                            text = category,
+                            color = textColor,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                            fontSize = 13.sp
+                        )
+                    }
                 }
             }
+        }
 
+        // 4. Kết quả tìm kiếm hoặc Popular/Recommend
+        if (isSearching) {
+            item {
+                if (!isLoading && filteredHotels.isEmpty()) EmptyState("No hotels found for \"$searchQuery\"")
+            }
             item {
                 if (!isLoading && filteredHotels.isNotEmpty()) {
-                    HotelHorizontalList(
-                        hotels = filteredHotels,
-                        navController = navController,
-                        favoriteViewModel = favoriteViewModel,
-                    )
+                    HotelHorizontalList(hotels = filteredHotels, navController = navController, favoriteViewModel = favoriteViewModel)
                 }
             }
-
         } else {
-
-            // ===== POPULAR =====
+            // Popular
+            item { SectionTitle(title = "Popular", onSeeAll = {}) }
             item {
-                SectionTitle(title = "Popular", onSeeAll = {})
-            }
-
-            item {
-                when {
-                    isLoading -> LoadingRow()
-                    popularHotels.isEmpty() ->
-                        EmptyState("No popular hotels")
-                    else ->
-                        HotelHorizontalList(
-                            hotels = popularHotels,
-                            navController = navController,
-                            favoriteViewModel = favoriteViewModel
-                        )
-
-                }
+                if (isLoading) LoadingRow()
+                else if (popularHotels.isEmpty()) EmptyState("No popular hotels")
+                else HotelHorizontalList(hotels = popularHotels, navController = navController, favoriteViewModel = favoriteViewModel)
                 Spacer(modifier = Modifier.height(24.dp))
             }
 
-            // ===== RECOMMEND =====
+            // Recommend
+            item { SectionTitle(title = "Recommend", onSeeAll = {}) }
             item {
-                SectionTitle(title = "Recommend", onSeeAll = {})
-            }
-
-            item {
-                when {
-                    isLoading -> LoadingRow()
-                    recommendHotels.isEmpty() ->
-                        EmptyState("No recommendations")
-                    else ->
-                        HotelHorizontalList(
-                            hotels = recommendHotels,
-                            navController = navController,
-                            favoriteViewModel = favoriteViewModel,
-
-                        )
-
-                }
+                if (isLoading) LoadingRow()
+                else if (recommendHotels.isEmpty()) EmptyState("No recommendations")
+                else HotelHorizontalList(hotels = recommendHotels, navController = navController, favoriteViewModel = favoriteViewModel)
             }
         }
     }
@@ -334,6 +335,7 @@ fun HotelHorizontalList(
             // Dòng này bây giờ sẽ hết lỗi vì favoriteList đã được khai báo ở trên
             val isFav = favoriteList.any { it.name == hotel.name }
 
+            // Trong HotelHorizontalList
             HotelCard(
                 hotel = hotel,
                 isFavorite = isFav,
@@ -341,8 +343,11 @@ fun HotelHorizontalList(
                     favoriteViewModel.toggleFavorite(selectedHotel)
                 },
                 onClick = {
-                    val hotelJson = Uri.encode(Gson().toJson(hotel))
-                    navController.navigate("${Screen.HotelDetail.route}/$hotelJson")}
+                    AppData.currentHotel = hotel // Lưu khách sạn hiện tại vào biến chung
+                    // ---------------------
+
+                    navController.navigate(Screen.HotelDetail.route)
+                }
             )
         }
     }
@@ -480,4 +485,14 @@ fun String.removeVietnameseAccents(): String {
     val normalized = Normalizer.normalize(this, Normalizer.Form.NFD)
     return normalized.replace("\\p{InCombiningDiacriticalMarks}+".toRegex(), "")
 }
+// Định nghĩa kiểu dữ liệu mẫu
+data class PopularDestination(val location: String, val imageRes: Int)
 
+// Hàm lấy dữ liệu mẫu
+fun getSampleDestinations(): List<PopularDestination> {
+    return listOf(
+        PopularDestination("Hà Nội", 0),
+        PopularDestination("Hồ Chí Minh", 0),
+        PopularDestination("Đà Nẵng", 0)
+    )
+}
