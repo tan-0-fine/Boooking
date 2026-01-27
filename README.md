@@ -52,10 +52,10 @@ Local Storage: Room Database / DataStore (Lưu cache)
 📱 Ảnh màn hình dự án
 
 ### 🏠 Màn hình Home
-![Home Screen](figma-images/home.png)
+![Home Screen](figma-images/Home.png)
 
 ### ✈️ Màn hình Booking
-![Booking Screen](figma-images/booking.png)
+![Booking Screen](figma-images/dat-ve-may-bay.png)
 
 ### 👤 Màn hình Profile
 ![Profile Screen](figma-images/profile.png)
