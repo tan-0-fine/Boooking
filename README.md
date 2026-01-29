@@ -59,3 +59,66 @@ Local Storage: Room Database / DataStore (Lưu cache)
 
 ### 👤 Màn hình Profile
 ![Profile Screen](figma-images/profile.png)
+
+Cấu trúc thư mục:
+com.example.travelapp
+├── api/                  
+│   ├── FacebookLogin.kt  
+│   ├── FlightModels.kt  
+│   ├── GoogleLogin.kt   
+│   ├── HotelApiService.kt
+│   ├── HotelResponse.kt  
+│   ├── RetrofitClient.kt 
+│   └── RoomOption.kt     
+│
+├── component/           
+│   ├── BookingSuccessScreen.kt
+│   ├── EmptyState.kt     
+│   ├── InputField.kt   
+│   ├── PasswordField.kt  
+│   └── PrimaryButton.kt  
+│
+├── data/                 
+│   ├── AppData.kt       
+│   ├── FavoriteDataStore.kt 
+│   ├── FirestoreRepository.kt 
+│   ├── PassengerInfo.kt  
+│   ├── PaymentMethod.kt 
+│   ├── RoomGenerator.kt  
+│   ├── TripStatus.kt     
+│   └── TripStorage.kt   
+│
+├── navigation/         
+│   └── NavGraph.kt      
+│
+├── screen/              
+│   ├── AllHotels.kt      
+│   ├── EditProfile.kt     
+│   ├── Favorite.kt              
+│   ├── FlightBooking.kt      
+│   ├── FlightResult.kt     
+│   ├── Home.kt           
+│   ├── HotelCard.kt  
+|   ├── Login.kt
+│   ├── Signup.kt
+|   ├── PassengerInfo.kt
+|   ├── ForgotPasswork.kt
+|   ├── Trip.kt
+|   ├── Payment.kt
+|   ├── Voucher.kt
+|   ├── Profile.kt
+|   ├── Wellcome.kt
+|   ├── RoomSelection.kt
+|   ├── SeatSelection.kt
+|   ├── HotelDetail.kt
+|   └── HotelCardVertical.kt
+├── viewmodel/            
+│   ├── FavoriteViewModel.kt
+│   ├── HomeViewModel.kt
+│   └── HotelDetailViewModel.kt
+│
+├── MainActivity.kt       
+└── ui.theme/         
+    ├── Color.kt
+    ├── Theme.kt
+    └── Type.kt
